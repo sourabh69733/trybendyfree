@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BendyFree — The Free Desktop Bend Effect for MacBook</title>
+  <meta name="description" content="Your desktop bends as you close the lid. The iPhone Duo fold effect for your MacBook — completely free.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BendyFree">
+  <meta property="og:title" content="BendyFree — Free Desktop Bend for MacBook">
+  <meta property="og:description" content="Your desktop bends as you close the lid. Completely free.">
+  <meta property="og:url" content="https://trybendyfree.in/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BendyFree">
+  <meta name="twitter:description" content="Your desktop bends as you close the lid. Completely free.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="brand">
+    <a class="wordmark" href="/">
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="22" height="22">
+        <path d="M2.5 15.5 6.2 5.9c.2-.4.6-.7 1-.7h6.9c.6 0 1 .6.8 1.2L11 15.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M2.5 15.5h15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      BendyFree
+    </a>
+    <span class="badge">100% Free</span>
+  </div>
+</header>
+
+<main class="stage">
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Your desktop bends as you close the lid.</h1>
+    <p class="lede">The fluid fold from iPhone Duo, for the MacBook you already have. No purchase needed — free forever.</p>
+    <div class="actions">
+      <a class="button" href="#download" id="downloadBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Download Free
+        <span class="amount">$0</span>
+      </a>
+      <p class="price-note">Free &amp; open source. No account, no license key.</p>
+    </div>
+  </section>
+
+  <!-- Interactive MacBook -->
+  <figure class="figure">
+    <div class="mac" id="mac">
+      <div class="lid">
+        <div class="screen" id="screen">
+          <!-- Sharp wallpaper -->
+          <div class="art sharp">
+            <svg viewBox="0 0 280 182" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d1b69"/><stop offset="1" stop-color="#6c3fa0"/></linearGradient>
+                <linearGradient id="far" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0e5ec"/><stop offset="1" stop-color="#85919f"/></linearGradient>
+                <linearGradient id="near" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+              </defs>
+              <rect width="280" height="182" fill="url(#sky)"/>
+              <circle cx="213" cy="49" r="11" fill="#eff5ff" fill-opacity=".7"/>
+              <path d="M0 116C40 132 120 100 190 112S260 96 280 96V182H0Z" fill="url(#far)"/>
+              <path d="M0 131C40 111 100 112 150 138S230 160 280 153V182H0Z" fill="url(#near)"/>
+            </svg>
+            <div class="clock"><small id="clockDate"></small><b id="clockTime">9:41</b></div>
+          </div>
+          <!-- Blur layers for progressive blur effect -->
+          <div class="art blurred b1">
+            <svg viewBox="0 0 280 182" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d1b69"/><stop offset="1" stop-color="#6c3fa0"/></linearGradient>
+                <linearGradient id="far1" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0e5ec"/><stop offset="1" stop-color="#85919f"/></linearGradient>
+                <linearGradient id="near1" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+              </defs>
+              <rect width="280" height="182" fill="url(#sky1)"/>
+              <circle cx="213" cy="49" r="11" fill="#eff5ff" fill-opacity=".7"/>
+              <path d="M0 116C40 132 120 100 190 112S260 96 280 96V182H0Z" fill="url(#far1)"/>
+              <path d="M0 131C40 111 100 112 150 138S230 160 280 153V182H0Z" fill="url(#near1)"/>
+            </svg>
+            <div class="clock"><small></small><b>9:41</b></div>
+          </div>
+          <div class="art blurred b2">
+            <svg viewBox="0 0 280 182" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d1b69"/><stop offset="1" stop-color="#6c3fa0"/></linearGradient>
+                <linearGradient id="far2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0e5ec"/><stop offset="1" stop-color="#85919f"/></linearGradient>
+                <linearGradient id="near2" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+              </defs>
+              <rect width="280" height="182" fill="url(#sky2)"/>
+              <circle cx="213" cy="49" r="11" fill="#eff5ff" fill-opacity=".7"/>
+              <path d="M0 116C40 132 120 100 190 112S260 96 280 96V182H0Z" fill="url(#far2)"/>
+              <path d="M0 131C40 111 100 112 150 138S230 160 280 153V182H0Z" fill="url(#near2)"/>
+            </svg>
+            <div class="clock"><small></small><b>9:41</b></div>
+          </div>
+          <div class="art blurred b3">
+            <svg viewBox="0 0 280 182" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d1b69"/><stop offset="1" stop-color="#6c3fa0"/></linearGradient>
+                <linearGradient id="far3" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0e5ec"/><stop offset="1" stop-color="#85919f"/></linearGradient>
+                <linearGradient id="near3" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+              </defs>
+              <rect width="280" height="182" fill="url(#sky3)"/>
+              <circle cx="213" cy="49" r="11" fill="#eff5ff" fill-opacity=".7"/>
+              <path d="M0 116C40 132 120 100 190 112S260 96 280 96V182H0Z" fill="url(#far3)"/>
+              <path d="M0 131C40 111 100 112 150 138S230 160 280 153V182H0Z" fill="url(#near3)"/>
+            </svg>
+            <div class="clock"><small></small><b>9:41</b></div>
+          </div>
+          <!-- Shadow overlay -->
+          <div class="shade" id="shade"></div>
+          <div class="home"></div>
+        </div>
+        <!-- Notch -->
+        <div class="notch">
+          <svg viewBox="0 0 64 9" preserveAspectRatio="none"><path d="M0 0Q2 0 2 2V5Q2 9 6 9H58Q62 9 62 5V2Q62 0 64 0Z" fill="currentColor"/></svg>
+        </div>
+      </div>
+      <div class="deck"><div class="lip"></div></div>
+    </div>
+    <figcaption class="caption">Scroll down. The screen bends, blurs, and shades — just like closing the lid.</figcaption>
+  </figure>
+
+  <!-- Comparison -->
+  <section class="comparison">
+    <div class="compare-card">
+      <div class="compare-col them">
+        <h3>Others charge</h3>
+        <span class="compare-price">$4.99</span>
+        <ul>
+          <li>Paid license</li>
+          <li>License key required</li>
+          <li>Limited to 3 Macs</li>
+        </ul>
+      </div>
+      <div class="compare-divider"><span>vs</span></div>
+      <div class="compare-col us">
+        <h3>BendyFree</h3>
+        <span class="compare-price free">$0</span>
+        <ul>
+          <li>Completely free</li>
+          <li>No account needed</li>
+          <li>Unlimited Macs</li>
+          <li>Open source</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature cards -->
+  <div class="stack">
+    <section class="card">
+      <h2>How it works</h2>
+      <dl>
+        <div class="row"><dt>Lid sensor</dt><dd>Reads the hinge angle from your Mac's built-in sensor. No polling, no hacks.</dd></div>
+        <div class="row"><dt>Live desktop</dt><dd>Captures the screen and renders the tilt with Metal — windows and wallpaper move together.</dd></div>
+        <div class="row"><dt>Multiple styles</dt><dd>Choose from different fold effects. Tune perspective, blur and shadow to your taste.</dd></div>
+        <div class="row"><dt>Menu bar</dt><dd>Lives quietly in the menu bar. Pause or quit with a single click.</dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Requirements</h2>
+      <dl>
+        <div class="row"><dt>macOS</dt><dd>14 Sonoma or later.</dd></div>
+        <div class="row"><dt>Hardware</dt><dd>Apple Silicon MacBook with lid angle sensor (2020+).</dd></div>
+        <div class="row"><dt>Permissions</dt><dd>Screen Recording, so the desktop can be captured.</dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Private by design</h2>
+      <dl>
+        <div class="row"><dt>On device</dt><dd>Frames stay on your Mac. Nothing recorded, saved, or uploaded.</dd></div>
+        <div class="row"><dt>No account</dt><dd>Download the DMG, drag to Applications. No sign-up, no tracking.</dd></div>
+        <div class="row"><dt>Open source</dt><dd>Code is public. Inspect, fork, and contribute.</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <!-- Download -->
+  <section class="download-section" id="download">
+    <h2 class="download-heading">Get BendyFree</h2>
+    <p class="download-sub">Download the DMG, drag to Applications, done.</p>
+    <a class="button button-lg" href="#" id="dmgLink">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Download .dmg
+      <span class="amount">Free</span>
+    </a>
+    <p class="download-note">macOS 14+ · Apple Silicon · ~5 MB</p>
+    <p class="download-note">First launch: Right-click → Open (app is not notarized yet).</p>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <span>&copy; <span id="year"></span> BendyFree · trybendyfree.in</span>
+    <nav class="links">
+      <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:support@trybendyfree.in">Support</a>
+    </nav>
+  </footer>
+
+</main>
+
+<script src="main.js"></script>
+</body>
+</html>
