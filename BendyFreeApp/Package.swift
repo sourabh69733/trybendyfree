@@ -13,6 +13,7 @@ let package = Package(
         .executableTarget(
             name: "BendyFree",
             path: "Sources/BendyFree"
-        )
+        ),
+        .testTarget(name: "BendyFreeTests", dependencies: ["BendyFree"])
     ]
 )
