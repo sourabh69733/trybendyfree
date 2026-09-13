@@ -6,47 +6,84 @@ public protocol LidSensorDelegate: AnyObject {
     func lidSensor(_ sensor: LidSensor, didUpdateAngle angle: Double)
 }
 
+protocol AngleReader: AnyObject, Sendable {
+    func readAngle() -> Double?
+    func close()
+}
+
 @MainActor
 public final class LidSensor {
     public weak var delegate: LidSensorDelegate?
-
-    private var hidManager: IOHIDManager?
-    private var device: IOHIDDevice?
-    private var timer: Timer?
-    
-    public private(set) var currentAngle: Double = 105.0
+    public var onUnavailable: (() -> Void)?
+    public private(set) var currentAngle = 105.0
     public private(set) var isSensorAvailable = false
+    public private(set) var isSimulating = false
 
-    public init() {
-        setupAndOpenSensor()
-    }
+    private let queue = DispatchQueue(label: "in.trybendyfree.sensor", qos: .utility)
+    private let reader: AngleReader
+    private var timer: DispatchSourceTimer?
+    private var generation = 0
 
-    deinit {
-        // Cleanup handled in stopMonitoring and close when app terminates
-    }
+    public convenience init() { self.init(reader: HIDAngleReader()) }
+
+    init(reader: AngleReader) { self.reader = reader }
 
     public func startMonitoring(interval: TimeInterval = 0.05) {
         stopMonitoring()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.pollAngle()
+        isSimulating = false
+        let activeGeneration = generation
+        let reader = self.reader
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now(), repeating: max(0.02, interval), leeway: .milliseconds(5))
+        timer.setEventHandler { [weak self] in
+            let angle = reader.readAngle()
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.generation == activeGeneration else { return }
+                guard let angle, angle.isFinite, (0...180).contains(angle) else {
+                    self.isSensorAvailable = false
+                    self.onUnavailable?()
+                    return
+                }
+                self.isSensorAvailable = true
+                self.currentAngle = angle
+                self.delegate?.lidSensor(self, didUpdateAngle: angle)
             }
         }
-        RunLoop.main.add(timer!, forMode: .common)
+        self.timer = timer
+        timer.resume()
     }
 
     public func stopMonitoring() {
-        timer?.invalidate()
+        generation += 1
+        timer?.cancel()
         timer = nil
+        isSensorAvailable = false
+        let reader = self.reader
+        // Serialized with reads; shutdown never waits for a stuck hardware call.
+        queue.async { reader.close() }
     }
 
     public func simulateAngle(_ angle: Double) {
-        currentAngle = max(0.0, min(180.0, angle))
+        if !isSimulating {
+            stopMonitoring()
+            isSimulating = true
+        }
+        guard angle.isFinite else { return }
+        currentAngle = max(0, min(180, angle))
         delegate?.lidSensor(self, didUpdateAngle: currentAngle)
     }
 
+    public func close() { stopMonitoring() }
+}
+
+/// All IOKit calls and handles are confined to LidSensor's serial worker queue.
+private final class HIDAngleReader: AngleReader, @unchecked Sendable {
+    private var hidManager: IOHIDManager?
+    private var device: IOHIDDevice?
+    private var nextDiscovery: TimeInterval = 0
+
     private func setupAndOpenSensor() {
-        if device != nil, isSensorAvailable { return }
+        if device != nil { return }
 
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         self.hidManager = manager
@@ -63,11 +100,6 @@ public final class LidSensor {
             [
                 kIOHIDVendorIDKey: 0x05AC,
                 kIOHIDProductIDKey: 0x8104
-            ],
-            // General orientation sensor matching
-            [
-                kIOHIDVendorIDKey: 0x05AC,
-                kIOHIDPrimaryUsagePageKey: 0x0020
             ]
         ]
 
@@ -80,10 +112,10 @@ public final class LidSensor {
                             var report = [UInt8](repeating: 0, count: 8)
                             var length = report.count
                             let res = IOHIDDeviceGetReport(candidate, kIOHIDReportTypeFeature, CFIndex(1), &report, &length)
-                            
-                            if res == kIOReturnSuccess && length >= 3 {
+
+                            if res == kIOReturnSuccess && length >= 3 && report[0] == 1 {
                                 self.device = candidate
-                                self.isSensorAvailable = true
+
                                 NSLog("[BendyFree] Hardware lid angle sensor successfully connected.")
                                 return
                             }
@@ -93,62 +125,37 @@ public final class LidSensor {
                 }
             }
         }
-        
-        isSensorAvailable = false
+
+        close()
     }
 
-    private func pollAngle() {
-        guard let dev = device else {
+    func readAngle() -> Double? {
+        if device == nil {
+            let now = ProcessInfo.processInfo.systemUptime
+            guard now >= nextDiscovery else { return nil }
+            nextDiscovery = now + 2
             setupAndOpenSensor()
-            return
         }
-
+        guard let device else { return nil }
         var report = [UInt8](repeating: 0, count: 8)
         var length = report.count
-
-        let result = IOHIDDeviceGetReport(
-            dev,
-            kIOHIDReportTypeFeature,
-            CFIndex(1),
-            &report,
-            &length
-        )
-
-        guard result == kIOReturnSuccess, length >= 3 else {
-            // Connection lost; trigger reconnect on next poll
-            self.device = nil
-            self.isSensorAvailable = false
-            return
+        let result = IOHIDDeviceGetReport(device, kIOHIDReportTypeFeature, 1, &report, &length)
+        guard result == kIOReturnSuccess, length >= 3, report[0] == 1 else {
+            close()
+            nextDiscovery = ProcessInfo.processInfo.systemUptime + 2
+            return nil
         }
-
-        let low = Int(report[1])
-        let high = Int(report[2]) << 8
-        let rawAngle = high | low
-
-        // Ignore 1 (docked/clamshell) or 0
-        guard rawAngle > 1 else { return }
-
-        var angle = Double(rawAngle)
-        // Normalize if sensor reports in tenths of a degree
-        if angle > 180.0 && angle <= 1800.0 {
-            angle = angle / 10.0
-        }
-
-        if angle >= 0.0 && angle <= 180.0 {
-            currentAngle = angle
-            delegate?.lidSensor(self, didUpdateAngle: currentAngle)
-        }
+        // Preserve the existing decoder until raw reports can be checked on hardware.
+        let raw = Int(report[1]) | (Int(report[2]) << 8)
+        var angle = Double(raw)
+        if angle > 180, angle <= 1800 { angle /= 10 }
+        return (0...180).contains(angle) ? angle : nil
     }
 
-    public func close() {
-        if let dev = device {
-            IOHIDDeviceClose(dev, IOOptionBits(kIOHIDOptionsTypeNone))
-            device = nil
-        }
-        if let mgr = hidManager {
-            IOHIDManagerClose(mgr, IOOptionBits(kIOHIDOptionsTypeNone))
-            hidManager = nil
-        }
-        isSensorAvailable = false
+    func close() {
+        if let device { IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeNone)) }
+        if let hidManager { IOHIDManagerClose(hidManager, IOOptionBits(kIOHIDOptionsTypeNone)) }
+        device = nil
+        hidManager = nil
     }
 }

@@ -8,6 +8,7 @@ public enum BendStyle: String, CaseIterable {
     case frost = "Frost"
 }
 
+@MainActor
 public final class BendOverlayWindow: NSWindow {
     // Visual layers
     private var contentContainerLayer = CALayer()
@@ -19,7 +20,18 @@ public final class BendOverlayWindow: NSWindow {
     
     // State & physics
     private var isEffectActive = false
+    private var session = FoldSession()
+    private var captureGeneration = 0
+    private var usesSensorWatchdog = true
     public var currentStyle: BendStyle = .silk
+    public var onStatusChange: ((String) -> Void)?
+    public private(set) var status = "Ready — close the lid below 90°" {
+        didSet {
+            guard status != oldValue else { return }
+            NSLog("[BendyFree] %@", status)
+            onStatusChange?(status)
+        }
+    }
     
     private var targetProgress: CGFloat = 0.0
     private var currentProgress: CGFloat = 0.0
@@ -28,12 +40,7 @@ public final class BendOverlayWindow: NSWindow {
     // Safety monitors
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
-    private var autoDismissTimer: Timer?
-
-    private let ciContext = CIContext(options: [
-        .useSoftwareRenderer: false,
-        .priorityRequestLow: false
-    ])
+    private var captureTimeoutTimer: Timer?
 
     public init() {
         let screenRect = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
@@ -47,7 +54,7 @@ public final class BendOverlayWindow: NSWindow {
         self.level = .floating
         self.isOpaque = false
         self.backgroundColor = .clear
-        self.ignoresMouseEvents = false
+        self.ignoresMouseEvents = true
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
         setupLayers(size: screenRect.size)
@@ -85,14 +92,6 @@ public final class BendOverlayWindow: NSWindow {
         blurLayer.contentsScale = scale
         blurLayer.contentsGravity = .resize
         blurLayer.opacity = 0.0
-
-        // Native GPU Gaussian Blur Filter on CALayer
-        if let blurFilter = CIFilter(name: "CIGaussianBlur") {
-            blurFilter.setDefaults()
-            blurFilter.setValue(28.0, forKey: kCIInputRadiusKey)
-            blurFilter.name = "gaussianBlur"
-            blurLayer.filters = [blurFilter]
-        }
 
         // Progressive Blur Mask: Top 70% blurs deeply, bottom 30% near keyboard stays crisp
         blurMaskLayer.bounds = CGRect(origin: .zero, size: size)
@@ -144,66 +143,66 @@ public final class BendOverlayWindow: NSWindow {
         rootLayer.addSublayer(contentContainerLayer)
     }
 
-    public func updateAngle(_ angle: Double) {
-        let startAngle = 100.0
-        let closeAngle = 20.0
-
-        if angle >= startAngle {
-            if isEffectActive {
-                targetProgress = 0.0
-            }
+    public func updateAngle(_ angle: Double, isSimulation: Bool = false) {
+        usesSensorWatchdog = !isSimulation
+        guard let progress = session.progress(angle: angle, now: ProcessInfo.processInfo.systemUptime) else {
+            if isEffectActive { hideEffect() }
+            if !session.isSuppressed { status = "Ready — close the lid below 90°" }
             return
         }
-
-        let clampedAngle = max(closeAngle, min(startAngle, angle))
-        let rawProgress = (startAngle - clampedAngle) / (startAngle - closeAngle)
-        
-        // Easing: Smooth start, smooth finish
-        let t = CGFloat(rawProgress)
-        self.targetProgress = t * t * (3.0 - 2.0 * t)
-
-        if !isEffectActive {
-            startEffect()
-        }
-
-        resetAutoDismissTimer()
+        targetProgress = CGFloat(progress)
+        if !isEffectActive { startEffect() }
     }
 
     private func startEffect() {
         guard !isEffectActive else { return }
-
-        // Capture screen snapshot
-        if let screenshot = ScreenCapture.captureMainDisplay() {
-            let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-            sharpLayer.contentsScale = scale
-            sharpLayer.contents = screenshot
-
-            // Synchronously create a pre-blurred buffer using CoreImage with edge clamping
-            let blurredImage = createBlurredSnapshot(from: screenshot) ?? screenshot
-            blurLayer.contentsScale = scale
-            blurLayer.contents = blurredImage
+        guard let screen = NSScreen.screens.first(where: { screen in
+            guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return false }
+            return CGDisplayIsBuiltin(number.uint32Value) != 0
+        }), let displayNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+            dismissEffect(reason: "Built-in display unavailable")
+            return
         }
 
-        self.orderFront(nil)
+        // Track preparation as active so repeated sensor readings cannot queue captures.
         isEffectActive = true
-
-        startPhysicsLoop()
+        status = "Preparing screen capture…"
+        captureGeneration += 1
+        let generation = captureGeneration
+        setFrame(screen.frame, display: false)
+        setupLayers(size: screen.frame.size)
+        currentProgress = 0
+        applyRender(progress: 0)
         setupSafetyDismissMonitors()
-        resetAutoDismissTimer()
+        startCaptureTimeout()
+
+        ScreenCapture.capture(displayID: displayNumber.uint32Value) { [weak self] result in
+            guard let self, self.isEffectActive, self.captureGeneration == generation else { return }
+            let snapshot: DesktopSnapshot
+            switch result {
+            case .success(let captured): snapshot = captured
+            case .failure(let failure):
+                self.dismissEffect(reason: failure.message)
+                return
+            }
+            self.captureTimeoutTimer?.invalidate()
+            self.captureTimeoutTimer = nil
+            self.sharpLayer.contents = snapshot.sharp
+            self.blurLayer.contents = snapshot.blurred
+            self.orderFront(nil)
+            self.status = "Fold effect active"
+            self.startPhysicsLoop()
+        }
     }
 
-    private func createBlurredSnapshot(from cgImage: CGImage) -> CGImage? {
-        let ciImage = CIImage(cgImage: cgImage)
-        // Clamp edges to prevent black borders during blur
-        let clamped = ciImage.clampedToExtent()
-        guard let filter = CIFilter(name: "CIGaussianBlur") else { return nil }
-        filter.setValue(clamped, forKey: kCIInputImageKey)
-        filter.setValue(32.0, forKey: kCIInputRadiusKey)
-        guard let output = filter.outputImage else { return nil }
-        return ciContext.createCGImage(output, from: ciImage.extent)
+    public func dismissEffect(reason: String = "Dismissed — reopen to 90° to resume") {
+        session.dismiss()
+        hideEffect()
+        status = reason
     }
 
-    public func dismissEffect() {
+    private func hideEffect() {
+        captureGeneration += 1
         guard isEffectActive else { return }
 
         targetProgress = 0.0
@@ -216,14 +215,14 @@ public final class BendOverlayWindow: NSWindow {
         isEffectActive = false
 
         removeSafetyDismissMonitors()
-        autoDismissTimer?.invalidate()
-        autoDismissTimer = nil
+        captureTimeoutTimer?.invalidate()
+        captureTimeoutTimer = nil
     }
 
     private func startPhysicsLoop() {
         stopPhysicsLoop()
         displayTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
-            self?.tickPhysics()
+            MainActor.assumeIsolated { self?.tickPhysics() }
         }
         RunLoop.main.add(displayTimer!, forMode: .common)
     }
@@ -234,7 +233,12 @@ public final class BendOverlayWindow: NSWindow {
     }
 
     private func tickPhysics() {
+        if usesSensorWatchdog && session.hasExpired(now: ProcessInfo.processInfo.systemUptime) {
+            dismissEffect(reason: "Angle updates stopped — reopen the lid to resume")
+            return
+        }
         let delta = targetProgress - currentProgress
+        if delta == 0 { return }
         if abs(delta) < 0.001 {
             currentProgress = targetProgress
             if currentProgress <= 0.0 {
@@ -298,11 +302,11 @@ public final class BendOverlayWindow: NSWindow {
         removeSafetyDismissMonitors()
 
         globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] _ in
-            self?.dismissEffect()
+            MainActor.assumeIsolated { self?.dismissEffect() }
         }
 
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
-            self?.dismissEffect()
+            MainActor.assumeIsolated { self?.dismissEffect() }
             return event
         }
     }
@@ -318,10 +322,11 @@ public final class BendOverlayWindow: NSWindow {
         }
     }
 
-    private func resetAutoDismissTimer() {
-        autoDismissTimer?.invalidate()
-        autoDismissTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
-            self?.dismissEffect()
+    private func startCaptureTimeout() {
+        captureTimeoutTimer?.invalidate()
+        captureTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.dismissEffect(reason: "Screen capture timed out — reopen the lid to retry") }
         }
+        RunLoop.main.add(captureTimeoutTimer!, forMode: .common)
     }
 }
