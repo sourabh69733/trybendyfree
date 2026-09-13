@@ -1,0 +1,62 @@
+import XCTest
+@testable import BendyFree
+
+final class LidSensorTests: XCTestCase {
+    @MainActor
+    func testSlowHardwareDoesNotBlockUIOrOverwriteSimulation() async {
+        let started = expectation(description: "hardware read started")
+        let finished = expectation(description: "hardware read returned")
+        let reader = BlockingReader(started: started, finished: finished)
+        let sensor = LidSensor(reader: reader)
+        let delegate = RecordingDelegate()
+        sensor.delegate = delegate
+        sensor.startMonitoring()
+
+        await fulfillment(of: [started], timeout: 2)
+        // This must remain usable while the hardware read is blocked.
+        sensor.simulateAngle(60)
+        XCTAssertTrue(sensor.isSimulating)
+        XCTAssertEqual(delegate.angles, [60])
+
+        reader.release.signal()
+        await fulfillment(of: [finished], timeout: 2)
+        // Drain the main queue after the worker has returned its obsolete reading.
+        let drained = expectation(description: "pending result delivered")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { drained.fulfill() }
+        await fulfillment(of: [drained], timeout: 1)
+        XCTAssertEqual(delegate.angles, [60])
+        XCTAssertEqual(sensor.currentAngle, 60)
+        sensor.close()
+    }
+}
+
+private final class BlockingReader: AngleReader, @unchecked Sendable {
+    let release = DispatchSemaphore(value: 0)
+    let started: XCTestExpectation
+    let finished: XCTestExpectation
+
+    init(started: XCTestExpectation, finished: XCTestExpectation) {
+        self.started = started
+        self.finished = finished
+    }
+
+    func readAngle() -> Double? {
+        XCTAssertFalse(Thread.isMainThread, "HID reads must never block the UI thread")
+        started.fulfill()
+        XCTAssertEqual(release.wait(timeout: .now() + 3), .success)
+        finished.fulfill()
+        return 70
+    }
+
+    func close() {
+        XCTAssertFalse(Thread.isMainThread, "Hardware cleanup must not block the UI")
+    }
+}
+
+@MainActor
+private final class RecordingDelegate: LidSensorDelegate {
+    var angles: [Double] = []
+    func lidSensor(_ sensor: LidSensor, didUpdateAngle angle: Double) {
+        angles.append(angle)
+    }
+}
