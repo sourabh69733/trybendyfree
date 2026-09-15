@@ -31,8 +31,15 @@ sudo -v
 sudo rm -rf -- "$INSTALLED_APP"
 sudo ditto "$BUNDLE" "$INSTALLED_APP"
 codesign --verify --deep --strict "$INSTALLED_APP"
+BUILD_HASH="$(shasum -a 256 "$BUNDLE/Contents/MacOS/BendyFree" | awk '{print $1}')"
+INSTALLED_HASH="$(shasum -a 256 "$INSTALLED_APP/Contents/MacOS/BendyFree" | awk '{print $1}')"
+if [[ "$BUILD_HASH" != "$INSTALLED_HASH" ]]; then
+    echo "Installation verification failed: installed binary does not match the new build." >&2
+    exit 1
+fi
 rm -rf -- "$PACKAGE_DIR/BendyFree.app" "$HOME/Applications/BendyFree.app"
 
 echo "Launching BendyFree…"
 open "$INSTALLED_APP"
+echo "Installed and verified build: $INSTALLED_HASH"
 echo "Use Allow Screen Recording… if needed, then try Test Fold before the hardware sensor."
