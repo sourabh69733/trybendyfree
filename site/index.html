@@ -10,13 +10,18 @@
   <meta name="theme-color" content="#000000">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="BendyFree">
   <meta property="og:locale" content="en_US">
   <meta property="og:title" content="BendyFree - Free Desktop Bend for MacBook">
   <meta property="og:description" content="Your desktop blurs and folds as you close the lid. A free macOS menu-bar app.">
   <meta property="og:url" content="https://trybendyfree.in/">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://trybendyfree.in/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://trybendyfree.in/og-image.png">
   <meta name="twitter:title" content="BendyFree - Free Desktop Bend for MacBook">
   <meta name="twitter:description" content="Your desktop blurs and folds as you close the lid. A free macOS menu-bar app.">
   <script type="application/ld+json">
@@ -31,6 +36,9 @@
     "description": "A free macOS menu-bar app that blurs and folds your desktop as you close your MacBook lid.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
+  </script>
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is BendyFree really free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. There's no purchase, account or license key."}}, {"@type": "Question", "name": "Does it work on Intel Macs?", "acceptedAnswer": {"@type": "Answer", "text": "No. It reads the lid angle sensor found in recent Apple Silicon MacBooks, and macOS 14 or later is required."}}, {"@type": "Question", "name": "Why does macOS say it can't verify the app?", "acceptedAnswer": {"@type": "Answer", "text": "BendyFree isn't notarized yet. Right-click the app and choose Open the first time you launch it."}}, {"@type": "Question", "name": "Does it need Screen Recording permission?", "acceptedAnswer": {"@type": "Answer", "text": "No. The blur is drawn by macOS itself, so your screen is never captured."}}, {"@type": "Question", "name": "The effect doesn't appear when I close the lid.", "acceptedAnswer": {"@type": "Answer", "text": "Check the menu bar. If it shows a live angle, the sensor works. If it shows a dash, your Mac's sensor isn't readable. You can also drag the Test Fold slider in the menu to preview the effect."}}, {"@type": "Question", "name": "How do I start it at login or quit it?", "acceptedAnswer": {"@type": "Answer", "text": "Open the 📐 menu bar item and choose Launch at Login or Quit BendyFree."}}]}
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -177,9 +185,9 @@
       <h2>How it works</h2>
       <dl>
         <div class="row"><dt>Lid sensor</dt><dd>Reads the hinge angle from your Mac's built-in sensor. No polling, no hacks.</dd></div>
-        <div class="row"><dt>Live desktop</dt><dd>Captures the screen and renders the tilt with Metal — windows and wallpaper move together.</dd></div>
-        <div class="row"><dt>Multiple styles</dt><dd>Choose from different fold effects. Tune perspective, blur and shadow to your taste.</dd></div>
-        <div class="row"><dt>Menu bar</dt><dd>Lives quietly in the menu bar. Pause or quit with a sing-e click.</dd></div>
+        <div class="row"><dt>Live desktop</dt><dd>Fades a live blur and soft shadow over your whole screen as the lid closes, starting around 110°.</dd></div>
+        <div class="row"><dt>Multiple styles</dt><dd>Pick Silk, Shade or Frost from the menu to change how deep the shadow falls.</dd></div>
+        <div class="row"><dt>Menu bar</dt><dd>Lives quietly in the menu bar. Pause, pick a style, launch at login, or quit in a single click.</dd></div>
       </dl>
     </section>
 
@@ -188,18 +196,28 @@
       <dl>
         <div class="row"><dt>macOS</dt><dd>14 Sonoma or later.</dd></div>
         <div class="row"><dt>Hardware</dt><dd>Apple Silicon MacBook with lid angle sensor (2020+).</dd></div>
-        <div class="row"><dt>Permissions</dt><dd>Screen Recording, so the desktop can be captured.</dd></div>
+        <div class="row"><dt>Permissions</dt><dd>None. It never records or captures your screen.</dd></div>
       </dl>
     </section>
 
     <section class="card">
       <h2>Private by design</h2>
       <dl>
-        <div class="row"><dt>On device</dt><dd>Frames stay on your Mac. Nothing recorded, saved, or uploaded.</dd></div>
+        <div class="row"><dt>On device</dt><dd>Everything runs on your Mac. Nothing is recorded, saved, or uploaded.</dd></div>
         <div class="row"><dt>No account</dt><dd>Download the DMG, drag to Applications. No sign-up, no tracking.</dd></div>
         <div class="row"><dt>Open source</dt><dd>Code is public. Inspect, fork, and contribute.</dd></div>
       </dl>
     </section>
+    <section class="card faq" id="faq">
+      <h2>FAQ</h2>
+      <details><summary>Is BendyFree really free?</summary><p>Yes. There's no purchase, account or license key.</p></details>
+      <details><summary>Does it work on Intel Macs?</summary><p>No. It reads the lid angle sensor found in recent Apple Silicon MacBooks, and macOS 14 or later is required.</p></details>
+      <details><summary>Why does macOS say it can't verify the app?</summary><p>BendyFree isn't notarized yet. Right-click the app and choose Open the first time you launch it.</p></details>
+      <details><summary>Does it need Screen Recording permission?</summary><p>No. The blur is drawn by macOS itself, so your screen is never captured.</p></details>
+      <details><summary>The effect doesn't appear when I close the lid.</summary><p>Check the menu bar. If it shows a live angle, the sensor works. If it shows a dash, your Mac's sensor isn't readable. You can also drag the Test Fold slider in the menu to preview the effect.</p></details>
+      <details><summary>How do I start it at login or quit it?</summary><p>Open the 📐 menu bar item and choose Launch at Login or Quit BendyFree.</p></details>
+    </section>
+
   </div>
 
   <!-- Download -->

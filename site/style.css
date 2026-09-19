@@ -435,3 +435,7 @@ footer a:hover { color: var(--ink); }
   }
   .download-heading { font-size: 26px; }
 }
+
+.faq details { border-top: 1px solid var(--line); padding: 14px 24px; }
+.faq summary { cursor: pointer; font-weight: 500; }
+.faq details p { margin: 8px 0 0; color: var(--muted); }
