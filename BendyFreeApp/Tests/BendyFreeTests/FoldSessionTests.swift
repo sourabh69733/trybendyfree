@@ -8,7 +8,7 @@ final class FoldSessionTests: XCTestCase {
         session.dismiss()
         XCTAssertNil(session.progress(angle: 69, now: 0.05))
         XCTAssertNil(session.progress(angle: 40, now: 1))
-        XCTAssertNil(session.progress(angle: 110, now: 2))
+        XCTAssertNil(session.progress(angle: 130, now: 2))
         XCTAssertNotNil(session.progress(angle: 70, now: 3))
     }
 
@@ -19,12 +19,13 @@ final class FoldSessionTests: XCTestCase {
         }
         XCTAssertFalse(session.hasExpired(now: 10))
         XCTAssertTrue(session.hasExpired(now: 12))
+        XCTAssertFalse(session.hasExpired(now: 10.9))
     }
 
     func testNormalWorkingAngleDoesNotStartAnInvisibleSession() {
         var session = FoldSession()
-        XCTAssertNil(session.progress(angle: 96, now: 0))
-        XCTAssertNil(session.progress(angle: 96, now: 10))
+        XCTAssertNil(session.progress(angle: 120, now: 0))
+        XCTAssertNil(session.progress(angle: 120, now: 10))
         XCTAssertNotNil(session.progress(angle: 70, now: 11))
     }
 
@@ -32,7 +33,7 @@ final class FoldSessionTests: XCTestCase {
         var session = FoldSession()
         _ = session.progress(angle: 70, now: 0)
         session.dismiss()
-        XCTAssertNil(session.progress(angle: 96, now: 1))
+        XCTAssertNil(session.progress(angle: 120, now: 1))
         XCTAssertNotNil(session.progress(angle: 60, now: 2))
     }
 
@@ -45,8 +46,8 @@ final class FoldSessionTests: XCTestCase {
 
     func testReopeningEndsSessionAndAllowsNextClose() {
         var session = FoldSession()
-        XCTAssertEqual(session.progress(angle: 55, now: 0), 0.5)
-        XCTAssertNil(session.progress(angle: 110, now: 1))
+        XCTAssertEqual(session.progress(angle: 70, now: 0), 0.5)
+        XCTAssertNil(session.progress(angle: 130, now: 1))
         XCTAssertFalse(session.hasExpired(now: 10))
         XCTAssertEqual(session.progress(angle: 20, now: 11), 1)
     }

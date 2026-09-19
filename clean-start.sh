@@ -22,7 +22,10 @@ rm -rf -- "$BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS"
 cp "$BIN_DIR/BendyFree" "$BUNDLE/Contents/MacOS/BendyFree"
 cp "$PACKAGE_DIR/Info.plist" "$BUNDLE/Contents/Info.plist"
-codesign --force --sign - "$BUNDLE"
+mkdir -p "$BUNDLE/Contents/Resources"
+cp "$PACKAGE_DIR/AppIcon.icns" "$BUNDLE/Contents/Resources/AppIcon.icns"
+# Set SIGN_IDENTITY (see `security find-identity -v -p codesigning`) so permissions survive rebuilds.
+codesign --force --sign "${SIGN_IDENTITY:--}" "$BUNDLE"
 codesign --verify --deep --strict "$BUNDLE"
 
 # Authenticate before removing installed copies. Preferences and permissions remain.
@@ -42,4 +45,4 @@ rm -rf -- "$PACKAGE_DIR/BendyFree.app" "$HOME/Applications/BendyFree.app"
 echo "Launching BendyFree…"
 open "$INSTALLED_APP"
 echo "Installed and verified build: $INSTALLED_HASH"
-echo "Use Allow Screen Recording… if needed, then try Test Fold before the hardware sensor."
+echo "Try Test Fold first, then the hardware sensor."

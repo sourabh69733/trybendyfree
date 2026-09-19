@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 
 @MainActor
 public final class MenuBarController: NSObject, NSMenuDelegate {
@@ -102,13 +103,13 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Test Slider: 100° is fully open (no effect), 30° is folded
+        // Test Slider: 120° is open (no effect), 30° is fully folded
         let sliderContainer = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 54))
         let sliderLabel = NSTextField(labelWithString: "Test Fold (Slide left to test):")
         sliderLabel.frame = NSRect(x: 14, y: 28, width: 190, height: 18)
         sliderLabel.font = NSFont.systemFont(ofSize: 11, weight: .medium)
 
-        let newSlider = NSSlider(value: 100, minValue: 25, maxValue: 100, target: self, action: #selector(sliderMoved(_:)))
+        let newSlider = NSSlider(value: 120, minValue: 25, maxValue: 120, target: self, action: #selector(sliderMoved(_:)))
         newSlider.frame = NSRect(x: 12, y: 4, width: 196, height: 22)
         newSlider.isContinuous = true
         self.slider = newSlider
@@ -123,6 +124,11 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         let resumeItem = NSMenuItem(title: "Resume Hardware Sensor", action: #selector(resumeHardware), keyEquivalent: "")
         resumeItem.target = self
         menu.addItem(resumeItem)
+
+        let loginItem = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin(_:)), keyEquivalent: "")
+        loginItem.target = self
+        loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        menu.addItem(loginItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -139,7 +145,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
 
     @objc private func dismissEffectNow() {
         overlayWindow.dismissEffect()
-        slider?.doubleValue = 100
+        slider?.doubleValue = 120
     }
 
     @objc private func toggleEnabled(_ sender: NSMenuItem) {
@@ -149,7 +155,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
             overlayWindow.dismissEffect()
         } else {
             // An explicit enable action should not inherit an old dismissal latch.
-            overlayWindow.updateAngle(100)
+            overlayWindow.updateAngle(120)
             overlayWindow.updateAngle(sensor.currentAngle, isSimulation: sensor.isSimulating)
         }
         updateEffectStatus()
@@ -163,14 +169,27 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func sliderMoved(_ sender: NSSlider) {
-        if !sensor.isSimulating { overlayWindow.updateAngle(105) }
+        if !sensor.isSimulating { overlayWindow.updateAngle(120) }
         let simulatedAngle = sender.doubleValue
         sensor.simulateAngle(simulatedAngle)
     }
 
     @objc private func resumeHardware() {
-        overlayWindow.updateAngle(100)
+        overlayWindow.updateAngle(120)
         sensor.startMonitoring()
+    }
+
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {
+            NSLog("[BendyFree] Launch at login failed: %@", error.localizedDescription)
+        }
+        sender.state = SMAppService.mainApp.status == .enabled ? .on : .off
     }
 
     @objc private func openWebsite() {

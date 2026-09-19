@@ -15,7 +15,7 @@ protocol AngleReader: AnyObject, Sendable {
 public final class LidSensor {
     public weak var delegate: LidSensorDelegate?
     public var onUnavailable: (() -> Void)?
-    public private(set) var currentAngle = 105.0
+    public private(set) var currentAngle = 120.0
     public private(set) var isSensorAvailable = false
     public private(set) var isSimulating = false
 
