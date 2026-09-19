@@ -6,6 +6,8 @@
     <string>en</string>
     <key>CFBundleExecutable</key>
     <string>BendyFree</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>in.trybendyfree.BendyFree</string>
     <key>CFBundleInfoDictionaryVersion</key>
