@@ -9,16 +9,16 @@ swift test --package-path BendyFreeApp
 swift build --package-path BendyFreeApp -c release
 ```
 
-The website is `index.html`, `style.css`, and `main.js`; it needs no build step.
+The website lives in `site/` (`index.html`, `style.css`, `main.js`); it needs no build step. Deploy with `npx wrangler deploy` (config in `wrangler.jsonc`). Run `./make-dmg.sh` to build `site/BendyFree.dmg` before deploying.
 
 ## Current behavior
 
-The app polls the Apple hinge sensor on a serial background queue. Below 90 degrees,
-it captures the built-in display once, prepares a blur off the UI thread, and animates
-that snapshot. It does not yet stream a live desktop or physically deform other apps.
-A read-only probe returned a valid report-1 angle on the local M3 Air; physical movement and visual rendering still need an end-to-end check.
+The app polls the Apple hinge sensor on a serial background queue. Below 110 degrees
+it fades in a live full-screen blur (`NSVisualEffectView`) with a darkening gradient,
+reaching full strength at 30 degrees. It needs no Screen Recording permission. It does
+not deform other apps' windows.
 
-The overlay passes clicks through. Clicking dismisses it; reopening to 90 degrees
+The overlay passes clicks through. Clicking dismisses it; reopening past 110 degrees
 arms the next fold. Valid sensor updates keep the effect active during a slow close.
 If updates stop for a second, the overlay dismisses. Preparing a capture has a separate
 five-second timeout. Missing sensor data, sleep, or a display change also dismisses it.
@@ -45,6 +45,5 @@ the test. This repair is a responsiveness baseline, not a verified final visual 
 ## Remaining work
 
 - Validate sensor readings and performance during physical lid movement on an M3 Air.
-- Replace the snapshot with bounded ScreenCaptureKit streaming that excludes the overlay.
-- Tune rendering only after capture and sensor behavior are measured on hardware.
+- Tune the blur material and strength on hardware.
 - Update promotional claims, add a real DMG/release link, and document distribution signing.
