@@ -105,7 +105,12 @@ private final class HIDAngleReader: AngleReader, @unchecked Sendable {
 
         for criteria in matchCriteria {
             IOHIDManagerSetDeviceMatching(manager, criteria as CFDictionary)
-            if IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone)) == kIOReturnSuccess {
+            let openResult = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+            if openResult != kIOReturnSuccess {
+                NSLog("[BendyFree] IOHIDManagerOpen failed: 0x%x", openResult)
+            } else {
+                let found = (IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice>)?.count ?? 0
+                NSLog("[BendyFree] HID matching found %d device(s)", found)
                 if let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> {
                     for candidate in devices {
                         if IOHIDDeviceOpen(candidate, IOOptionBits(kIOHIDOptionsTypeNone)) == kIOReturnSuccess {
@@ -113,6 +118,7 @@ private final class HIDAngleReader: AngleReader, @unchecked Sendable {
                             var length = report.count
                             let res = IOHIDDeviceGetReport(candidate, kIOHIDReportTypeFeature, CFIndex(1), &report, &length)
 
+                            NSLog("[BendyFree] GetReport result=0x%x length=%d bytes=%@", res, length, report.map { String($0) }.joined(separator: ","))
                             if res == kIOReturnSuccess && length >= 3 && report[0] == 1 {
                                 self.device = candidate
 

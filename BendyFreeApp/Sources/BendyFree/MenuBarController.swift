@@ -53,7 +53,6 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     private func updateEffectStatus() {
         let message: String
         if !isEnabled { message = "Effect disabled" }
-        else if !CGPreflightScreenCaptureAccess() { message = "Screen Recording permission required" }
         else { message = overlayWindow.status }
         effectMenuItem?.title = message
         statusItem?.button?.toolTip = message
@@ -124,9 +123,6 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         let resumeItem = NSMenuItem(title: "Resume Hardware Sensor", action: #selector(resumeHardware), keyEquivalent: "")
         resumeItem.target = self
         menu.addItem(resumeItem)
-        let permissionItem = NSMenuItem(title: "Allow Screen Recording…", action: #selector(requestScreenRecording), keyEquivalent: "")
-        permissionItem.target = self
-        menu.addItem(permissionItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -175,15 +171,6 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     @objc private func resumeHardware() {
         overlayWindow.updateAngle(100)
         sensor.startMonitoring()
-    }
-
-    @objc private func requestScreenRecording() {
-        CGRequestScreenCaptureAccess()
-        if !CGPreflightScreenCaptureAccess(), let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-            NSWorkspace.shared.open(url)
-        }
-        overlayWindow.updateAngle(100)
-        updateEffectStatus()
     }
 
     @objc private func openWebsite() {

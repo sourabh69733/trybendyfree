@@ -1,6 +1,5 @@
 import AppKit
 import QuartzCore
-import CoreImage
 
 public enum BendStyle: String, CaseIterable {
     case silk = "Silk"
@@ -11,17 +10,13 @@ public enum BendStyle: String, CaseIterable {
 @MainActor
 public final class BendOverlayWindow: NSWindow {
     // Visual layers
-    private var contentContainerLayer = CALayer()
-    private var sharpLayer = CALayer()
-    private var blurLayer = CALayer()
-    private var blurMaskLayer = CAGradientLayer()
+    private let blurView = NSVisualEffectView()
+    private let blurMaskLayer = CAGradientLayer()
     private var shadowLayer = CAGradientLayer()
-    private var featherMaskLayer = CAGradientLayer()
     
     // State & physics
     private var isEffectActive = false
     private var session = FoldSession()
-    private var captureGeneration = 0
     private var usesSensorWatchdog = true
     public var currentStyle: BendStyle = .silk
     public var onStatusChange: ((String) -> Void)?
@@ -40,7 +35,6 @@ public final class BendOverlayWindow: NSWindow {
     // Safety monitors
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
-    private var captureTimeoutTimer: Timer?
 
     public init() {
         let screenRect = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
@@ -61,42 +55,20 @@ public final class BendOverlayWindow: NSWindow {
     }
 
     private func setupLayers(size: CGSize) {
-        guard let contentView = self.contentView else { return }
-        contentView.wantsLayer = true
-        guard let rootLayer = contentView.layer else { return }
+        let host = NSView(frame: NSRect(origin: .zero, size: size))
+        host.wantsLayer = true
+        self.contentView = host
 
-        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        rootLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
-
-        // Root 3D perspective
-        var sublayerTransform = CATransform3DIdentity
-        sublayerTransform.m34 = -1.0 / 1400.0
-        rootLayer.sublayerTransform = sublayerTransform
-
-        // 3D Content Container: Hinge anchored at the bottom
-        contentContainerLayer.bounds = CGRect(origin: .zero, size: size)
-        contentContainerLayer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        contentContainerLayer.position = CGPoint(x: size.width / 2.0, y: 0.0)
-
-        // 1. Sharp Base Desktop Layer
-        sharpLayer.bounds = CGRect(origin: .zero, size: size)
-        sharpLayer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        sharpLayer.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
-        sharpLayer.contentsScale = scale
-        sharpLayer.contentsGravity = .resize
-
-        // 2. Soft Progressive Blur Layer
-        blurLayer.bounds = CGRect(origin: .zero, size: size)
-        blurLayer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        blurLayer.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
-        blurLayer.contentsScale = scale
-        blurLayer.contentsGravity = .resize
-        blurLayer.opacity = 0.0
-
-        // Progressive Blur Mask: Top 70% blurs deeply, bottom 30% near keyboard stays crisp
-        blurMaskLayer.bounds = CGRect(origin: .zero, size: size)
-        blurMaskLayer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        blurMaskLayer.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
+        // Live blur of whatever is behind the window; no Screen Recording permission needed.
+        blurView.frame = host.bounds
+        blurView.autoresizingMask = [.width, .height]
+        blurView.blendingMode = .behindWindow
+        blurView.material = .fullScreenUI
+        blurView.state = .active
+        blurView.wantsLayer = true
+        blurView.alphaValue = 0
+        // Progressive blur: strong at the top (screen far edge), crisp near the keyboard.
+        blurMaskLayer.frame = host.bounds
         blurMaskLayer.colors = [
             NSColor.white.cgColor,
             NSColor.white.withAlphaComponent(0.8).cgColor,
@@ -105,12 +77,10 @@ public final class BendOverlayWindow: NSWindow {
         blurMaskLayer.locations = [0.0, 0.50, 0.85]
         blurMaskLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
         blurMaskLayer.endPoint = CGPoint(x: 0.5, y: 0.10)
-        blurLayer.mask = blurMaskLayer
+        blurView.layer?.mask = blurMaskLayer
+        host.addSubview(blurView)
 
-        // 3. Ambient & Vignette Shadow Layer
-        shadowLayer.bounds = CGRect(origin: .zero, size: size)
-        shadowLayer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        shadowLayer.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
+        shadowLayer.frame = host.bounds
         shadowLayer.colors = [
             NSColor.black.withAlphaComponent(0.85).cgColor,
             NSColor.black.withAlphaComponent(0.40).cgColor,
@@ -120,27 +90,7 @@ public final class BendOverlayWindow: NSWindow {
         shadowLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
         shadowLayer.endPoint = CGPoint(x: 0.5, y: 0.15)
         shadowLayer.opacity = 0.0
-
-        // 4. Soft Top Edge Feathering
-        featherMaskLayer.bounds = CGRect(origin: .zero, size: size)
-        featherMaskLayer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        featherMaskLayer.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
-        featherMaskLayer.colors = [
-            NSColor.clear.cgColor,
-            NSColor.white.cgColor,
-            NSColor.white.cgColor
-        ]
-        featherMaskLayer.locations = [0.0, 0.06, 1.0]
-        featherMaskLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
-        featherMaskLayer.endPoint = CGPoint(x: 0.5, y: 0.0)
-
-        // Assembly
-        contentContainerLayer.addSublayer(sharpLayer)
-        contentContainerLayer.addSublayer(blurLayer)
-        contentContainerLayer.addSublayer(shadowLayer)
-        contentContainerLayer.mask = featherMaskLayer
-
-        rootLayer.addSublayer(contentContainerLayer)
+        host.layer?.addSublayer(shadowLayer)
     }
 
     public func updateAngle(_ angle: Double, isSimulation: Bool = false) {
@@ -159,40 +109,20 @@ public final class BendOverlayWindow: NSWindow {
         guard let screen = NSScreen.screens.first(where: { screen in
             guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return false }
             return CGDisplayIsBuiltin(number.uint32Value) != 0
-        }), let displayNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+        }) else {
             dismissEffect(reason: "Built-in display unavailable")
             return
         }
 
-        // Track preparation as active so repeated sensor readings cannot queue captures.
         isEffectActive = true
-        status = "Preparing screen capture…"
-        captureGeneration += 1
-        let generation = captureGeneration
         setFrame(screen.frame, display: false)
         setupLayers(size: screen.frame.size)
         currentProgress = 0
         applyRender(progress: 0)
         setupSafetyDismissMonitors()
-        startCaptureTimeout()
-
-        ScreenCapture.capture(displayID: displayNumber.uint32Value) { [weak self] result in
-            guard let self, self.isEffectActive, self.captureGeneration == generation else { return }
-            let snapshot: DesktopSnapshot
-            switch result {
-            case .success(let captured): snapshot = captured
-            case .failure(let failure):
-                self.dismissEffect(reason: failure.message)
-                return
-            }
-            self.captureTimeoutTimer?.invalidate()
-            self.captureTimeoutTimer = nil
-            self.sharpLayer.contents = snapshot.sharp
-            self.blurLayer.contents = snapshot.blurred
-            self.orderFront(nil)
-            self.status = "Fold effect active"
-            self.startPhysicsLoop()
-        }
+        orderFront(nil)
+        status = "Fold effect active"
+        startPhysicsLoop()
     }
 
     public func dismissEffect(reason: String = "Dismissed — reopen to 90° to resume") {
@@ -202,7 +132,6 @@ public final class BendOverlayWindow: NSWindow {
     }
 
     private func hideEffect() {
-        captureGeneration += 1
         guard isEffectActive else { return }
 
         targetProgress = 0.0
@@ -210,13 +139,9 @@ public final class BendOverlayWindow: NSWindow {
         stopPhysicsLoop()
 
         self.orderOut(nil)
-        sharpLayer.contents = nil
-        blurLayer.contents = nil
         isEffectActive = false
 
         removeSafetyDismissMonitors()
-        captureTimeoutTimer?.invalidate()
-        captureTimeoutTimer = nil
     }
 
     private func startPhysicsLoop() {
@@ -256,31 +181,12 @@ public final class BendOverlayWindow: NSWindow {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
 
-        // 1. Subtle, natural 3D tilt (max 38° so desktop doesn't tumble away)
-        let maxTiltAngle = 38.0 * .pi / 180.0
-        let tilt = progress * maxTiltAngle
+        blurView.alphaValue = min(1.0, progress * 1.35)
 
-        var transform = CATransform3DIdentity
-        transform = CATransform3DRotate(transform, tilt, 1.0, 0.0, 0.0)
-        contentContainerLayer.transform = transform
-
-        // 2. Heavy progressive blur cross-fade
-        // At 50% fold, blur is already deeply visible
-        let blurAlpha = min(1.0, progress * 1.35)
-        blurLayer.opacity = Float(blurAlpha)
-
-        // 3. Dynamic top-edge feathering
-        let feather = NSNumber(value: Float(min(0.25, 0.04 + progress * 0.16)))
-        featherMaskLayer.locations = [0.0, feather, 1.0]
-
-        // 4. Style-dependent shadow intensity
         switch currentStyle {
-        case .silk:
-            shadowLayer.opacity = Float(progress * 0.75)
-        case .shade:
-            shadowLayer.opacity = Float(progress * 0.95)
-        case .frost:
-            shadowLayer.opacity = Float(progress * 0.40)
+        case .silk: shadowLayer.opacity = Float(progress * 0.75)
+        case .shade: shadowLayer.opacity = Float(progress * 0.95)
+        case .frost: shadowLayer.opacity = Float(progress * 0.40)
         }
 
         CATransaction.commit()
@@ -320,13 +226,5 @@ public final class BendOverlayWindow: NSWindow {
             NSEvent.removeMonitor(monitor)
             localEventMonitor = nil
         }
-    }
-
-    private func startCaptureTimeout() {
-        captureTimeoutTimer?.invalidate()
-        captureTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated { self?.dismissEffect(reason: "Screen capture timed out — reopen the lid to retry") }
-        }
-        RunLoop.main.add(captureTimeoutTimer!, forMode: .common)
     }
 }
