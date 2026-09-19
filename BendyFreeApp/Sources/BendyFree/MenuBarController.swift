@@ -44,8 +44,8 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     }
 
     public func showSensorUnavailable() {
-        statusItem?.button?.title = "📐 —"
-        angleMenuItem?.title = "Lid sensor unavailable — effect paused"
+        statusItem?.button?.title = "📐 -"
+        angleMenuItem?.title = "Lid sensor unavailable - effect paused"
     }
 
     public func menuWillOpen(_ menu: NSMenu) { updateEffectStatus() }
@@ -62,7 +62,7 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         let menu = NSMenu()
         menu.delegate = self
 
-        let titleItem = NSMenuItem(title: "BendyFree — Desktop Fold", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "BendyFree - Desktop Fold", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 

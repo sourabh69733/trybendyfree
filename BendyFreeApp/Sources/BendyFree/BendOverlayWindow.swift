@@ -20,7 +20,7 @@ public final class BendOverlayWindow: NSWindow {
     private var usesSensorWatchdog = true
     public var currentStyle: BendStyle = .silk
     public var onStatusChange: ((String) -> Void)?
-    public private(set) var status = "Ready — close the lid below 90°" {
+    public private(set) var status = "Ready - close the lid below 90°" {
         didSet {
             guard status != oldValue else { return }
             NSLog("[BendyFree] %@", status)
@@ -97,7 +97,7 @@ public final class BendOverlayWindow: NSWindow {
         usesSensorWatchdog = !isSimulation
         guard let progress = session.progress(angle: angle, now: ProcessInfo.processInfo.systemUptime) else {
             if isEffectActive { hideEffect() }
-            if !session.isSuppressed { status = "Ready — close the lid below 90°" }
+            if !session.isSuppressed { status = "Ready - close the lid below 90°" }
             return
         }
         targetProgress = CGFloat(progress)
@@ -125,7 +125,7 @@ public final class BendOverlayWindow: NSWindow {
         startPhysicsLoop()
     }
 
-    public func dismissEffect(reason: String = "Dismissed — reopen to 90° to resume") {
+    public func dismissEffect(reason: String = "Dismissed - reopen to 90° to resume") {
         session.dismiss()
         hideEffect()
         status = reason
@@ -159,7 +159,7 @@ public final class BendOverlayWindow: NSWindow {
 
     private func tickPhysics() {
         if usesSensorWatchdog && session.hasExpired(now: ProcessInfo.processInfo.systemUptime) {
-            dismissEffect(reason: "Angle updates stopped — reopen the lid to resume")
+            dismissEffect(reason: "Angle updates stopped - reopen the lid to resume")
             return
         }
         let delta = targetProgress - currentProgress
