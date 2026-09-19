@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="BendyFree logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b8cff"/>
+      <stop offset="1" stop-color="#8a4dff"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <!-- bent screen: tilted back, wider at the hinge -->
+  <path d="M40 30h48c3 0 5 3 4.2 6L98 76H30l5.8-40c.4-3.3 2-6 4.2-6z" fill="url(#screen)"/>
+  <!-- base -->
+  <rect x="20" y="82" width="88" height="10" rx="5" fill="#fff"/>
+</svg>

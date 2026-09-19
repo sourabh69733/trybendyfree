@@ -1,4 +1,4 @@
-// ── BendyFree — Scroll-driven lid bend effect ──
+// ── BendyFree - Scroll-driven lid bend effect ──
 (function () {
   'use strict';
 
@@ -47,7 +47,7 @@
 
   // ── Paint one frame of the bend effect ──
   function paint(p) {
-    // Perspective rotation — screen tilts back
+    // Perspective rotation - screen tilts back
     screen.style.transform = 'perspective(1400px) rotateX(' + (p * 72).toFixed(2) + 'deg)';
 
     // Progressive blur layers fade in
@@ -55,7 +55,7 @@
       blurred[i].style.opacity = p.toFixed(3);
     }
 
-    // Top-edge feather mask — softens the silhouette as it bends
+    // Top-edge feather mask - softens the silhouette as it bends
     var t = p * 22;
     var mask = 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) ' +
       (t * 0.25).toFixed(2) + '%, rgba(0,0,0,.65) ' +
