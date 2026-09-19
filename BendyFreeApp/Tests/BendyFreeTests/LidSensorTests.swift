@@ -60,3 +60,51 @@ private final class RecordingDelegate: LidSensorDelegate {
         angles.append(angle)
     }
 }
+
+extension LidSensorTests {
+    @MainActor
+    func testUnavailableIsReportedOnceNotOnEveryPoll() async {
+        let sensor = LidSensor(reader: ScriptedReader(readings: []))
+        var reports = 0
+        sensor.onUnavailable = { reports += 1 }
+        sensor.startMonitoring(interval: 0.02)
+
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        sensor.close()
+        XCTAssertEqual(reports, 1)
+        XCTAssertFalse(sensor.isSensorAvailable)
+    }
+
+    @MainActor
+    func testReadingsAreSmoothedBeforeReachingDelegate() async {
+        let sensor = LidSensor(reader: ScriptedReader(readings: [100, 80]))
+        let delegate = RecordingDelegate()
+        sensor.delegate = delegate
+        sensor.startMonitoring(interval: 0.02)
+
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        sensor.close()
+        XCTAssertEqual(delegate.angles.first, 100)
+        XCTAssertEqual(delegate.angles.dropFirst().first ?? 0, 90, accuracy: 0.0001)
+    }
+}
+
+/// Returns the scripted readings in order, then nil (sensor lost) or repeats the last one.
+private final class ScriptedReader: AngleReader, @unchecked Sendable {
+    private let lock = NSLock()
+    private var readings: [Double]
+    private var last: Double?
+
+    init(readings: [Double]) {
+        self.readings = readings
+        self.last = readings.last
+    }
+
+    func readAngle() -> Double? {
+        lock.lock(); defer { lock.unlock() }
+        if !readings.isEmpty { return readings.removeFirst() }
+        return last
+    }
+
+    func close() {}
+}
