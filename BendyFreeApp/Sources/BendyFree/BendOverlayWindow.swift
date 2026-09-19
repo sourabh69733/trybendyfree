@@ -11,7 +11,6 @@ public enum BendStyle: String, CaseIterable {
 public final class BendOverlayWindow: NSWindow {
     // Visual layers
     private let blurView = NSVisualEffectView()
-    private let blurMaskLayer = CAGradientLayer()
     private var shadowLayer = CAGradientLayer()
     
     // State & physics
@@ -67,17 +66,6 @@ public final class BendOverlayWindow: NSWindow {
         blurView.state = .active
         blurView.wantsLayer = true
         blurView.alphaValue = 0
-        // Progressive blur: strong at the top (screen far edge), crisp near the keyboard.
-        blurMaskLayer.frame = host.bounds
-        blurMaskLayer.colors = [
-            NSColor.white.cgColor,
-            NSColor.white.withAlphaComponent(0.8).cgColor,
-            NSColor.clear.cgColor
-        ]
-        blurMaskLayer.locations = [0.0, 0.50, 0.85]
-        blurMaskLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
-        blurMaskLayer.endPoint = CGPoint(x: 0.5, y: 0.10)
-        blurView.layer?.mask = blurMaskLayer
         host.addSubview(blurView)
 
         shadowLayer.frame = host.bounds
