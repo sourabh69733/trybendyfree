@@ -32,6 +32,8 @@
     "url": "https://trybendyfree.in/",
     "image": "https://trybendyfree.in/logo.svg",
     "applicationCategory": "UtilitiesApplication",
+    "softwareVersion": "1.0.0",
+    "downloadUrl": "https://trybendyfree.in/BendyFree.dmg",
     "operatingSystem": "macOS 14 or later",
     "description": "A free macOS menu-bar app that blurs and folds your desktop as you close your MacBook lid.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -42,7 +44,8 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
   <meta name="google-site-verification" content="dp7dw47Xx1ZqPyJdXC94NczV37P70BP6dVrW5qIhASU" />
 </head>
@@ -66,7 +69,7 @@
     <h1>Your desktop bends as you close the lid.</h1>
     <p class="lede">The fluid fold from iPhone Duo, for the MacBook you already have. No purchase needed — free forever.</p>
     <div class="actions">
-      <a class="button" href="#download" id="downloadBtn">-
+      <a class="button" href="#download" id="downloadBtn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -79,7 +82,7 @@
 
   <!-- Interactive MacBook -->
   <figure class="figure">
-    <div class="mac" id="mac">
+    <div class="mac" id="mac" role="img" aria-label="Illustration of a MacBook whose screen tilts back, blurs and darkens as the lid closes">
       <div class="lid">
         <div class="screen" id="screen">
           <!-- Sharp wallpaper -->
@@ -153,17 +156,17 @@
     </div>
     <figcaption class="caption">Scroll down. The screen bends, blurs, and shades — just like closing the lid.</figcaption>
   </figure>
--
+
   <!-- Comparison -->
   <section class="comparison">
     <div class="compare-card">
       <div class="compare-col them">
-        <h3>Others charge</h3>
-        <span class="compare-price">$4.99</span>
+        <h3>Paid apps</h3>
+        <span class="compare-price">$$</span>
         <ul>
           <li>Paid license</li>
-          <li>License key required</li>
-          <li>Limited to 3 Macs</li>
+          <li>Often need a license key</li>
+          <li>May limit the number of Macs</li>
         </ul>
       </div>
       <div class="compare-divider"><span>vs</span></div>
@@ -178,6 +181,14 @@
         </ul>
       </div>
     </div>
+  </section>
+
+  <!-- About -->
+  <section class="card about" id="about">
+    <h2>What is the lid fold effect?</h2>
+    <p>Recent MacBooks have a hinge sensor that reports exactly how far the lid is open. BendyFree reads that lid angle and, as you close the lid, gradually blurs and darkens your desktop, so the screen appears to fold away instead of just going dark.</p>
+    <p>It's a small menu-bar app for Apple Silicon MacBooks running macOS 14 or later. It starts fading in around 110° and reaches full strength near 30°. There's no account, no license key and no Screen Recording permission, and everything runs on your Mac.</p>
+    <p>If you've seen the iPhone Duo-style fold effect on a Mac and wondered whether there's a free version, this is it. Download the DMG below, drag BendyFree to Applications, and close your lid.</p>
   </section>
 
   <!-- Feature cards -->

@@ -439,3 +439,7 @@ footer a:hover { color: var(--ink); }
 .faq details { border-top: 1px solid var(--line); padding: 14px 24px; }
 .faq summary { cursor: pointer; font-weight: 500; }
 .faq details p { margin: 8px 0 0; color: var(--muted); }
+
+.about { padding: 24px; margin-bottom: 16px; }
+.about p { margin: 0 0 12px; color: var(--muted); line-height: 1.6; }
+.about p:last-child { margin-bottom: 0; }
