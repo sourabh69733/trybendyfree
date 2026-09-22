@@ -44,12 +44,12 @@
     return Math.min(Math.max(scrollY / travel, 0), 1);
   }
 
-  // ── Paint one frame: first stage closes the lid, second stage bends it ──
+  // ── Paint one frame: the lid starts closing first, the bend catches up and finishes it ──
   function paint(raw) {
-    // Stage 1 (first half of scroll): the lid swings shut.
-    var closeP = smoothstep(Math.min(Math.max(raw / 0.5, 0), 1));
-    // Stage 2 (second half): the closed screen blurs and darkens - the bend effect.
-    var bendP = smoothstep(Math.min(Math.max((raw - 0.5) / 0.5, 0), 1));
+    // Closing runs the full scroll so the motion is visible the whole time.
+    var closeP = smoothstep(Math.min(Math.max(raw / 0.85, 0), 1));
+    // The bend starts just after closing begins and overlaps it, so it is visible while closing.
+    var bendP = smoothstep(Math.min(Math.max((raw - 0.15) / 0.85, 0), 1));
 
     screen.style.transform = 'perspective(1400px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
 

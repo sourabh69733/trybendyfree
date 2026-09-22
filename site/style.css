@@ -147,7 +147,7 @@ h1 {
   position: relative;
   margin: 0 3.81cqw;
   aspect-ratio: 1.54;
-  background: #121212;
+  background: var(--bg);
   border-radius: 4.83cqw 4.83cqw 0 0;
   overflow: hidden;
 }
