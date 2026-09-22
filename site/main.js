@@ -41,22 +41,25 @@
   }
 
   function progress(scrollY) {
-    var raw = Math.min(Math.max(scrollY / travel, 0), 1);
-    return smoothstep(raw);
+    return Math.min(Math.max(scrollY / travel, 0), 1);
   }
 
-  // ── Paint one frame of the bend effect ──
-  function paint(p) {
-    // Perspective rotation - screen swings forward and down, like a real lid closing
-    screen.style.transform = 'perspective(1400px) rotateX(' + (-(p * 72)).toFixed(2) + 'deg)';
+  // ── Paint one frame: first stage closes the lid, second stage bends it ──
+  function paint(raw) {
+    // Stage 1 (first half of scroll): the lid swings shut.
+    var closeP = smoothstep(Math.min(Math.max(raw / 0.5, 0), 1));
+    // Stage 2 (second half): the closed screen blurs and darkens - the bend effect.
+    var bendP = smoothstep(Math.min(Math.max((raw - 0.5) / 0.5, 0), 1));
+
+    screen.style.transform = 'perspective(1400px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
 
     // Progressive blur layers fade in
     for (var i = 0; i < blurred.length; i++) {
-      blurred[i].style.opacity = p.toFixed(3);
+      blurred[i].style.opacity = bendP.toFixed(3);
     }
 
     // Top-edge feather mask - softens the silhouette as it bends
-    var t = p * 22;
+    var t = bendP * 22;
     var mask = 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) ' +
       (t * 0.25).toFixed(2) + '%, rgba(0,0,0,.65) ' +
       (t * 0.55).toFixed(2) + '%, #000 ' +
@@ -64,8 +67,8 @@
     screen.style.webkitMaskImage = mask;
     screen.style.maskImage = mask;
 
-    // Shadow overlay
-    shade.style.opacity = (p * 0.9).toFixed(3);
+    // Shadow overlay - a light shadow as it closes, deepening once it bends
+    shade.style.opacity = (closeP * 0.35 + bendP * 0.55).toFixed(3);
   }
 
   // ── Animation loop ──
