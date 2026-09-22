@@ -3,6 +3,7 @@
   'use strict';
 
   // DOM refs
+  var lid = document.getElementById('lid');
   var screen = document.getElementById('screen');
   var blurred = document.querySelectorAll('.art.blurred');
   var shade = document.getElementById('shade');
@@ -51,7 +52,8 @@
     // The bend starts just after closing begins and overlaps it, so it is visible while closing.
     var bendP = smoothstep(Math.min(Math.max((raw - 0.15) / 0.85, 0), 1));
 
-    screen.style.transform = 'perspective(1400px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
+    // Bezel, screen and notch tilt together - nothing rotates independently of the case.
+    lid.style.transform = 'perspective(1400px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
 
     // Progressive blur layers fade in
     for (var i = 0; i < blurred.length; i++) {

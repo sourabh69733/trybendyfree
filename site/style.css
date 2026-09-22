@@ -147,17 +147,19 @@ h1 {
   position: relative;
   margin: 0 3.81cqw;
   aspect-ratio: 1.54;
-  background: var(--bg);
+  background: #121212;
   border-radius: 4.83cqw 4.83cqw 0 0;
   overflow: hidden;
+  /* Hinge at the bottom, where the lid meets the deck: the whole bezel,
+     screen and notch rotate together as one rigid piece. */
+  transform-origin: 50% 100%;
+  will-change: transform;
 }
 .screen {
   position: absolute;
   inset: 1.5cqw 1.5cqw 2.2cqw;
   border-radius: 3.4cqw 3.4cqw 0 0;
   overflow: hidden;
-  transform-origin: 50% 100%;
-  will-change: transform;
   background: #2d1b69;
 }
 .art { position: absolute; inset: 0; }
