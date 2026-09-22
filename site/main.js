@@ -47,8 +47,8 @@
 
   // ── Paint one frame of the bend effect ──
   function paint(p) {
-    // Perspective rotation - screen tilts back
-    screen.style.transform = 'perspective(1400px) rotateX(' + (p * 72).toFixed(2) + 'deg)';
+    // Perspective rotation - screen swings forward and down, like a real lid closing
+    screen.style.transform = 'perspective(1400px) rotateX(' + (-(p * 72)).toFixed(2) + 'deg)';
 
     // Progressive blur layers fade in
     for (var i = 0; i < blurred.length; i++) {
