@@ -3,7 +3,6 @@
   'use strict';
 
   // DOM refs
-  var figure = document.querySelector('.figure');
   var lid = document.getElementById('lid');
   var screen = document.getElementById('screen');
   var blurred = document.querySelectorAll('.art.blurred');
@@ -11,7 +10,9 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Animation state
-  var travel = 900;    // px of scroll for a full bend, once the figure is in view
+  // Short enough that it finishes while the figure (which sits high on the
+  // page, right after the hero) is still on screen, not scrolled past it.
+  var travel = 400;
   var current = 0;
   var target = 0;
 
@@ -42,15 +43,10 @@
     return t * t * (3 - 2 * t);
   }
 
-  // Normal free scroll, no pinning. Progress is based on the figure's own
-  // position on screen (not a fixed page offset), so the fold reliably
-  // starts as it comes into view rather than depending on how much content
-  // sits above it.
+  // Plain scroll distance from page load - always 0 before the user scrolls,
+  // whatever the viewport size or how far down the page the figure sits.
   function progress() {
-    if (!figure) return 0;
-    var top = figure.getBoundingClientRect().top;
-    var raw = (window.innerHeight - top) / travel;
-    return Math.min(Math.max(raw, 0), 1);
+    return Math.min(Math.max(window.scrollY / travel, 0), 1);
   }
 
   // ── Paint one frame: the lid starts closing first, the bend catches up and finishes it ──
