@@ -3,7 +3,7 @@
   'use strict';
 
   // DOM refs
-  var pinTrack = document.getElementById('pinTrack');
+  var figure = document.querySelector('.figure');
   var lid = document.getElementById('lid');
   var screen = document.getElementById('screen');
   var blurred = document.querySelectorAll('.art.blurred');
@@ -11,6 +11,7 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Animation state
+  var travel = 900;    // px of scroll for a full bend, once the figure is in view
   var current = 0;
   var target = 0;
 
@@ -41,16 +42,15 @@
     return t * t * (3 - 2 * t);
   }
 
-  // The figure is pinned (position: sticky) for the height of #pinTrack.
-  // Progress is how far we've scrolled through that pinned section, not an
-  // absolute page offset - so it always reaches 1 while still in view,
-  // whatever sits above it on the page.
+  // Normal free scroll, no pinning. Progress is based on the figure's own
+  // position on screen (not a fixed page offset), so the fold reliably
+  // starts as it comes into view rather than depending on how much content
+  // sits above it.
   function progress() {
-    if (!pinTrack) return 0;
-    var runLength = pinTrack.offsetHeight - window.innerHeight;
-    if (runLength <= 0) return 0;
-    var scrolledIntoPin = -pinTrack.getBoundingClientRect().top;
-    return Math.min(Math.max(scrolledIntoPin / runLength, 0), 1);
+    if (!figure) return 0;
+    var top = figure.getBoundingClientRect().top;
+    var raw = (window.innerHeight - top) / travel;
+    return Math.min(Math.max(raw, 0), 1);
   }
 
   // ── Paint one frame: the lid starts closing first, the bend catches up and finishes it ──
