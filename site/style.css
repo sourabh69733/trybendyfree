@@ -130,12 +130,25 @@ h1 {
   font-size: 14px;
 }
 
-/* ── MacBook figure ── */
+/* ── MacBook figure ──
+   Pinned in view for the scroll distance so the close-and-bend animation
+   always finishes while it's on screen, instead of scrolling away first. */
+.pin-track {
+  position: relative;
+  height: calc(100vh + 900px);
+  margin-bottom: 56px;
+}
 .figure {
+  position: sticky;
+  top: 10vh;
   width: min(880px, calc(100vw - 48px));
-  margin: 0 0 56px 50%;
+  margin: 0 0 0 50%;
   transform: translateX(-50%);
   padding: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pin-track { height: auto; }
+  .figure { position: static; transform: translateX(-50%); }
 }
 .mac {
   width: 100%;
