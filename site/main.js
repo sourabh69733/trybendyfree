@@ -53,7 +53,8 @@
     var bendP = smoothstep(Math.min(Math.max((raw - 0.15) / 0.85, 0), 1));
 
     // Bezel, screen and notch tilt together - nothing rotates independently of the case.
-    lid.style.transform = 'perspective(1400px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
+    // A long perspective distance keeps the near edge from magnifying past the keyboard's width.
+    lid.style.transform = 'perspective(8000px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
 
     // Progressive blur layers fade in
     for (var i = 0; i < blurred.length; i++) {
