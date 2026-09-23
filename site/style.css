@@ -163,10 +163,15 @@ h1 {
   inset: 1.5cqw 1.5cqw 2.2cqw;
   border-radius: 3.4cqw 3.4cqw 0 0;
   overflow: hidden;
-  background: #2d1b69;
+  background: #14171a;
 }
 .art { position: absolute; inset: 0; }
-.art svg { width: 100%; height: 100%; display: block; }
+.art svg, .art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
 
 /* Progressive blur layers */
 .art.blurred { opacity: 0; transform: scale(1.03); }
@@ -205,6 +210,7 @@ h1 {
   color: rgba(255,255,255,0.9);
   letter-spacing: -0.04em;
   line-height: 1;
+  text-shadow: 0 1px 10px rgba(0,0,0,.55);
 }
 .clock small {
   display: block;
