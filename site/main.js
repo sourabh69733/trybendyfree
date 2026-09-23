@@ -3,6 +3,7 @@
   'use strict';
 
   // DOM refs
+  var pinTrack = document.getElementById('pinTrack');
   var lid = document.getElementById('lid');
   var screen = document.getElementById('screen');
   var blurred = document.querySelectorAll('.art.blurred');
@@ -10,7 +11,6 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Animation state
-  var travel = 900;    // px of scroll for a full bend
   var current = 0;
   var target = 0;
 
@@ -41,8 +41,16 @@
     return t * t * (3 - 2 * t);
   }
 
-  function progress(scrollY) {
-    return Math.min(Math.max(scrollY / travel, 0), 1);
+  // The figure is pinned (position: sticky) for the height of #pinTrack.
+  // Progress is how far we've scrolled through that pinned section, not an
+  // absolute page offset - so it always reaches 1 while still in view,
+  // whatever sits above it on the page.
+  function progress() {
+    if (!pinTrack) return 0;
+    var runLength = pinTrack.offsetHeight - window.innerHeight;
+    if (runLength <= 0) return 0;
+    var scrolledIntoPin = -pinTrack.getBoundingClientRect().top;
+    return Math.min(Math.max(scrolledIntoPin / runLength, 0), 1);
   }
 
   // ── Paint one frame: the lid starts closing first, the bend catches up and finishes it ──
@@ -89,13 +97,14 @@
 
   // ── Scroll listener ──
   function onScroll() {
-    target = progress(window.scrollY);
+    target = progress();
   }
 
   // ── Init ──
   function start() {
     window.addEventListener('scroll', onScroll, { passive: true });
-    target = current = progress(window.scrollY);
+    window.addEventListener('resize', onScroll, { passive: true });
+    target = current = progress();
     paint(current);
     requestAnimationFrame(frame);
   }
@@ -106,3 +115,4 @@
     window.addEventListener('load', start);
   }
 })();
+
