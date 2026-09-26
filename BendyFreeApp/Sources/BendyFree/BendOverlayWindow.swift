@@ -164,27 +164,31 @@ public final class BendOverlayWindow: NSWindow {
         applyRender(progress: currentProgress)
     }
 
-    /// Each style gets its own blur material and shadow tint, not just a different
-    /// opacity multiplier on top of an identical blur - otherwise the difference
-    /// between styles is too subtle to notice.
+    /// Each style gets its own shadow tint, and Shade/Frost force the blur to render
+    /// in its dark/light variant - but the material itself always stays
+    /// `.fullScreenUI`. Switching `.material` between different kinds (e.g. adding
+    /// `.hudWindow`, which expects an actual HUD panel, not a plain window) risked
+    /// leaving the view's backdrop rendering stuck even after switching back;
+    /// `.appearance` has no such requirement, so it is the only thing that varies.
     private func updateMaterial() {
+        blurView.material = .fullScreenUI
         switch currentStyle {
         case .silk:
-            blurView.material = .fullScreenUI
+            blurView.appearance = nil // follow the system's current appearance
             shadowLayer.colors = [
                 NSColor.black.withAlphaComponent(0.85).cgColor,
                 NSColor.black.withAlphaComponent(0.40).cgColor,
                 NSColor.clear.cgColor
             ]
         case .shade:
-            blurView.material = .hudWindow
+            blurView.appearance = NSAppearance(named: .darkAqua)
             shadowLayer.colors = [
                 NSColor.black.withAlphaComponent(0.95).cgColor,
                 NSColor.black.withAlphaComponent(0.60).cgColor,
                 NSColor.clear.cgColor
             ]
         case .frost:
-            blurView.material = .sidebar
+            blurView.appearance = NSAppearance(named: .aqua)
             shadowLayer.colors = [
                 NSColor(calibratedRed: 0.75, green: 0.85, blue: 1.0, alpha: 0.55).cgColor,
                 NSColor(calibratedRed: 0.75, green: 0.85, blue: 1.0, alpha: 0.20).cgColor,

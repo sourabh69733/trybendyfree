@@ -52,14 +52,26 @@ final class BendOverlayWindowTests: XCTestCase {
 }
 
 extension BendOverlayWindowTests {
-    func testEachStyleGetsADistinctMaterial() {
+    // The material is deliberately the SAME (.fullScreenUI) for every style - only
+    // appearance and shadow tint vary. A different material per style (e.g.
+    // .hudWindow, which expects an actual HUD panel) risked leaving the blur
+    // stuck even after switching back to Silk.
+    func testMaterialStaysFullScreenUIForEveryStyle() {
         let window = BendOverlayWindow()
-        var materials: [BendStyle: NSVisualEffectView.Material] = [:]
         for style in BendStyle.allCases {
             window.currentStyle = style
-            materials[style] = window.blurView.material
+            XCTAssertEqual(window.blurView.material, .fullScreenUI)
         }
-        XCTAssertEqual(Set(materials.values).count, BendStyle.allCases.count, "each style should look distinct, not share a material")
+    }
+
+    func testEachStyleGetsADistinctAppearance() {
+        let window = BendOverlayWindow()
+        window.currentStyle = .silk
+        XCTAssertNil(window.blurView.appearance, "Silk should follow the system appearance")
+        window.currentStyle = .shade
+        XCTAssertEqual(window.blurView.appearance?.name, .darkAqua)
+        window.currentStyle = .frost
+        XCTAssertEqual(window.blurView.appearance?.name, .aqua)
     }
 
     func testEachStyleGetsADistinctShadowTint() {
@@ -69,7 +81,6 @@ extension BendOverlayWindowTests {
             window.currentStyle = style
             firstColors[style] = window.shadowLayer.colors as? [CGColor]
         }
-        XCTAssertEqual(firstColors[.silk]?.first, firstColors[.silk]?.first)
         XCTAssertNotEqual(firstColors[.frost]?.first, firstColors[.silk]?.first, "Frost should not look identical to Silk")
         XCTAssertNotEqual(firstColors[.shade]?.first, firstColors[.silk]?.first, "Shade should not look identical to Silk")
     }
@@ -77,8 +88,25 @@ extension BendOverlayWindowTests {
     func testSelectingAStyleWhileEffectIsOpenUpdatesImmediately() {
         let window = BendOverlayWindow()
         window.currentStyle = .frost
-        let frostMaterial = window.blurView.material
+        let frostAppearance = window.blurView.appearance
         window.currentStyle = .shade
-        XCTAssertNotEqual(window.blurView.material, frostMaterial)
+        XCTAssertNotEqual(window.blurView.appearance, frostAppearance)
+    }
+
+    // The exact bug reported: switch away to Frost/Shade, then back to Silk,
+    // and Silk must render identically to how it did before any switching.
+    func testSwitchingAwayAndBackToSilkRestoresItExactly() {
+        let window = BendOverlayWindow()
+        let originalAppearance = window.blurView.appearance
+        let originalMaterial = window.blurView.material
+        let originalColors = window.shadowLayer.colors as? [CGColor]
+
+        window.currentStyle = .frost
+        window.currentStyle = .shade
+        window.currentStyle = .silk
+
+        XCTAssertEqual(window.blurView.appearance, originalAppearance)
+        XCTAssertEqual(window.blurView.material, originalMaterial)
+        XCTAssertEqual(window.shadowLayer.colors as? [CGColor], originalColors)
     }
 }
