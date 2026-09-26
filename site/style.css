@@ -177,18 +177,18 @@ h1 {
 .art.blurred { opacity: 0; transform: scale(1.03); }
 .art.b1 {
   filter: blur(6px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 75%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 75%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 96%);
 }
 .art.b2 {
   filter: blur(16px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 15%, transparent 52%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 15%, transparent 52%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 15%, transparent 88%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 15%, transparent 88%);
 }
 .art.b3 {
   filter: blur(36px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 6%, transparent 34%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 6%, transparent 34%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 6%, transparent 78%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 6%, transparent 78%);
 }
 
 /* Shade overlay */
@@ -197,9 +197,9 @@ h1 {
   inset: 0;
   opacity: 0;
   background:
-    radial-gradient(120% 60% at 0% 0%, rgba(0,0,0,.55), transparent 60%),
-    radial-gradient(120% 60% at 100% 0%, rgba(0,0,0,.55), transparent 60%),
-    linear-gradient(to bottom, rgba(0,0,0,.35), transparent 45%);
+    radial-gradient(120% 90% at 0% 0%, rgba(0,0,0,.55), transparent 75%),
+    radial-gradient(120% 90% at 100% 0%, rgba(0,0,0,.55), transparent 75%),
+    linear-gradient(to bottom, rgba(0,0,0,.35), transparent 92%);
 }
 
 /* Clock on screen */
