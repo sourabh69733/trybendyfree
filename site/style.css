@@ -363,6 +363,8 @@ h1 {
 .row:last-child { border-bottom: 0; }
 dt { margin: 0; letter-spacing: -0.015em; font-weight: 500; }
 dd { margin: 0; color: var(--muted); }
+dd a { color: var(--ink); text-underline-offset: 2px; }
+dd a:hover { color: var(--accent); }
 
 /* ── Download section ── */
 .download-section {
