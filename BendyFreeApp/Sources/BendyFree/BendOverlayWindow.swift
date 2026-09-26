@@ -10,14 +10,17 @@ public enum BendStyle: String, CaseIterable {
 @MainActor
 public final class BendOverlayWindow: NSWindow {
     // Visual layers
-    private let blurView = NSVisualEffectView()
-    private var shadowLayer = CAGradientLayer()
+    // internal (not private) so tests can verify each style gets a distinct material/tint.
+    let blurView = NSVisualEffectView()
+    var shadowLayer = CAGradientLayer()
     
     // State & physics
     private var isEffectActive = false
     private var session = FoldSession()
     private var usesSensorWatchdog = true
-    public var currentStyle: BendStyle = .silk
+    public var currentStyle: BendStyle = .silk {
+        didSet { updateMaterial() }
+    }
     public var onStatusChange: ((String) -> Void)?
     public private(set) var status = "Ready - close the lid below 110°" {
         didSet {
@@ -62,23 +65,19 @@ public final class BendOverlayWindow: NSWindow {
         blurView.frame = host.bounds
         blurView.autoresizingMask = [.width, .height]
         blurView.blendingMode = .behindWindow
-        blurView.material = .fullScreenUI
         blurView.state = .active
         blurView.wantsLayer = true
         blurView.alphaValue = 0
         host.addSubview(blurView)
 
         shadowLayer.frame = host.bounds
-        shadowLayer.colors = [
-            NSColor.black.withAlphaComponent(0.85).cgColor,
-            NSColor.black.withAlphaComponent(0.40).cgColor,
-            NSColor.clear.cgColor
-        ]
         shadowLayer.locations = [0.0, 0.45, 0.85]
         shadowLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
         shadowLayer.endPoint = CGPoint(x: 0.5, y: 0.15)
         shadowLayer.opacity = 0.0
         host.layer?.addSublayer(shadowLayer)
+
+        updateMaterial() // sets blurView.material and shadowLayer.colors for currentStyle
     }
 
     public func updateAngle(_ angle: Double, isSimulation: Bool = false) {
@@ -163,6 +162,35 @@ public final class BendOverlayWindow: NSWindow {
         }
 
         applyRender(progress: currentProgress)
+    }
+
+    /// Each style gets its own blur material and shadow tint, not just a different
+    /// opacity multiplier on top of an identical blur - otherwise the difference
+    /// between styles is too subtle to notice.
+    private func updateMaterial() {
+        switch currentStyle {
+        case .silk:
+            blurView.material = .fullScreenUI
+            shadowLayer.colors = [
+                NSColor.black.withAlphaComponent(0.85).cgColor,
+                NSColor.black.withAlphaComponent(0.40).cgColor,
+                NSColor.clear.cgColor
+            ]
+        case .shade:
+            blurView.material = .hudWindow
+            shadowLayer.colors = [
+                NSColor.black.withAlphaComponent(0.95).cgColor,
+                NSColor.black.withAlphaComponent(0.60).cgColor,
+                NSColor.clear.cgColor
+            ]
+        case .frost:
+            blurView.material = .sidebar
+            shadowLayer.colors = [
+                NSColor(calibratedRed: 0.75, green: 0.85, blue: 1.0, alpha: 0.55).cgColor,
+                NSColor(calibratedRed: 0.75, green: 0.85, blue: 1.0, alpha: 0.20).cgColor,
+                NSColor.clear.cgColor
+            ]
+        }
     }
 
     private func applyRender(progress: CGFloat) {

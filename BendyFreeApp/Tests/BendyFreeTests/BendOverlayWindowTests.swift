@@ -50,3 +50,35 @@ final class BendOverlayWindowTests: XCTestCase {
         XCTAssertFalse(window.isVisible)
     }
 }
+
+extension BendOverlayWindowTests {
+    func testEachStyleGetsADistinctMaterial() {
+        let window = BendOverlayWindow()
+        var materials: [BendStyle: NSVisualEffectView.Material] = [:]
+        for style in BendStyle.allCases {
+            window.currentStyle = style
+            materials[style] = window.blurView.material
+        }
+        XCTAssertEqual(Set(materials.values).count, BendStyle.allCases.count, "each style should look distinct, not share a material")
+    }
+
+    func testEachStyleGetsADistinctShadowTint() {
+        let window = BendOverlayWindow()
+        var firstColors: [BendStyle: [CGColor]] = [:]
+        for style in BendStyle.allCases {
+            window.currentStyle = style
+            firstColors[style] = window.shadowLayer.colors as? [CGColor]
+        }
+        XCTAssertEqual(firstColors[.silk]?.first, firstColors[.silk]?.first)
+        XCTAssertNotEqual(firstColors[.frost]?.first, firstColors[.silk]?.first, "Frost should not look identical to Silk")
+        XCTAssertNotEqual(firstColors[.shade]?.first, firstColors[.silk]?.first, "Shade should not look identical to Silk")
+    }
+
+    func testSelectingAStyleWhileEffectIsOpenUpdatesImmediately() {
+        let window = BendOverlayWindow()
+        window.currentStyle = .frost
+        let frostMaterial = window.blurView.material
+        window.currentStyle = .shade
+        XCTAssertNotEqual(window.blurView.material, frostMaterial)
+    }
+}
