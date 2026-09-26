@@ -1,7 +1,7 @@
 {
   "name": "trybendyfree",
   "compatibility_date": "2026-09-19",
-  "assets": { "directory": "./site" }
+  "assets": { "directory": "./site" },
 "observability": {
     "enabled": false
   }
