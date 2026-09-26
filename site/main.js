@@ -3,6 +3,7 @@
   'use strict';
 
   // DOM refs
+  var figure = document.querySelector('.figure');
   var lid = document.getElementById('lid');
   var screen = document.getElementById('screen');
   var blurred = document.querySelectorAll('.art.blurred');
@@ -10,11 +11,16 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Animation state
-  // Short enough that it finishes while the figure (which sits high on the
-  // page, right after the hero) is still on screen, not scrolled past it.
-  var travel = 400;
+  var lead = 250;      // px: start closing this far before the figure reaches the top
+  var travel = 400;     // px: scroll distance from start to fully closed
+  var anchor = 0;       // the figure's fixed position in the page (not affected by scroll)
   var current = 0;
   var target = 0;
+
+  function computeAnchor() {
+    anchor = figure ? figure.offsetTop : 0;
+  }
+  computeAnchor();
 
   // ── Clock ──
   function updateClock() {
@@ -43,10 +49,14 @@
     return t * t * (3 - 2 * t);
   }
 
-  // Plain scroll distance from page load - always 0 before the user scrolls,
-  // whatever the viewport size or how far down the page the figure sits.
+  // Tied to the figure's fixed page position, not absolute scroll-from-top.
+  // Closing and reopening both happen over the same short, bounded window
+  // around that position - so reopening never means scrolling all the way
+  // back to the top, however far down the page you went. At scrollY=0 this
+  // is always 0 (fully open), since the figure sits below the top of the page.
   function progress() {
-    return Math.min(Math.max(window.scrollY / travel, 0), 1);
+    var raw = (window.scrollY - (anchor - lead)) / travel;
+    return Math.min(Math.max(raw, 0), 1);
   }
 
   // ── Paint one frame: the lid starts closing first, the bend catches up and finishes it ──
@@ -96,10 +106,16 @@
     target = progress();
   }
 
+  function onResize() {
+    computeAnchor();
+    target = progress();
+  }
+
   // ── Init ──
   function start() {
+    computeAnchor(); // re-measure once images/fonts have settled the layout
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
     target = current = progress();
     paint(current);
     requestAnimationFrame(frame);
