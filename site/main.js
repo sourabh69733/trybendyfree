@@ -68,7 +68,9 @@
 
     // Bezel, screen and notch tilt together - nothing rotates independently of the case.
     // A long perspective distance keeps the near edge from magnifying past the keyboard's width.
-    lid.style.transform = 'perspective(8000px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
+    // Stops just short of 90deg (perfectly edge-on): at exactly 90 the lid
+    // vanishes into an invisible line instead of reading as closed.
+    lid.style.transform = 'perspective(8000px) rotateX(' + (-(closeP * 86)).toFixed(2) + 'deg)';
 
     // One blur radius applied to the whole wallpaper at once - no masks, so
     // there is no region of the screen that can be left out.
