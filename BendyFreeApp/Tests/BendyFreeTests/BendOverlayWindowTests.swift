@@ -110,3 +110,29 @@ extension BendOverlayWindowTests {
         XCTAssertEqual(window.shadowLayer.colors as? [CGColor], originalColors)
     }
 }
+
+extension BendOverlayWindowTests {
+    // The exact bug reported: any click or keystroke anywhere on the system
+    // (not just this app) used to dismiss the effect. Only Escape should.
+    func testOnlyEscapeDismissesNotAnyKey() {
+        let window = BendOverlayWindow()
+        window.updateAngle(60)
+        XCTAssertEqual(window.status, "Fold effect active")
+
+        let letterA = NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+            windowNumber: window.windowNumber, context: nil,
+            characters: "a", charactersIgnoringModifiers: "a", isARepeat: false, keyCode: 0
+        )!
+        window.keyDown(with: letterA)
+        XCTAssertEqual(window.status, "Fold effect active", "an ordinary keystroke must not dismiss the effect")
+
+        let escape = NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+            windowNumber: window.windowNumber, context: nil,
+            characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53
+        )!
+        window.keyDown(with: escape)
+        XCTAssertNotEqual(window.status, "Fold effect active", "Escape should dismiss the effect")
+    }
+}

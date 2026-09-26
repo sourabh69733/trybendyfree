@@ -212,27 +212,29 @@ public final class BendOverlayWindow: NSWindow {
         CATransaction.commit()
     }
 
-    public override func mouseDown(with event: NSEvent) {
-        dismissEffect()
-    }
-
-    public override func rightMouseDown(with event: NSEvent) {
-        dismissEffect()
-    }
+    private static let escapeKeyCode: UInt16 = 53
 
     public override func keyDown(with event: NSEvent) {
-        dismissEffect()
+        if event.keyCode == Self.escapeKeyCode { dismissEffect() }
     }
 
+    // Escape is a deliberate "let me out" gesture, unlike an ordinary click or
+    // keystroke, which the user can make anywhere on the system - in any other
+    // app, on any monitor - while just doing something unrelated. Dismissing on
+    // any click/key system-wide (the previous behavior) meant the effect could
+    // vanish from an action that had nothing to do with it.
     private func setupSafetyDismissMonitors() {
         removeSafetyDismissMonitors()
 
-        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] _ in
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.keyCode == Self.escapeKeyCode else { return }
             MainActor.assumeIsolated { self?.dismissEffect() }
         }
 
-        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
-            MainActor.assumeIsolated { self?.dismissEffect() }
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == Self.escapeKeyCode {
+                MainActor.assumeIsolated { self?.dismissEffect() }
+            }
             return event
         }
     }
