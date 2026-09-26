@@ -10,7 +10,9 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
     private var isEnabled = true
     private var angleMenuItem: NSMenuItem?
     private var effectMenuItem: NSMenuItem?
-    private var slider: NSSlider?
+    // internal (not private) so tests can verify the slider and menu item stay in sync.
+    var slider: NSSlider?
+    var resumeItem: NSMenuItem?
 
     public init(sensor: LidSensor, overlayWindow: BendOverlayWindow) {
         self.sensor = sensor
@@ -57,6 +59,8 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         else { message = overlayWindow.status }
         effectMenuItem?.title = message
         statusItem?.button?.toolTip = message
+        // Nothing to resume until Test Fold has actually overridden the sensor.
+        resumeItem?.isEnabled = sensor.isSimulating
     }
 
     private func buildMenu() {
@@ -121,9 +125,11 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         testItem.view = sliderContainer
         menu.addItem(testItem)
 
-        let resumeItem = NSMenuItem(title: "Resume Hardware Sensor", action: #selector(resumeHardware), keyEquivalent: "")
-        resumeItem.target = self
-        menu.addItem(resumeItem)
+        let newResumeItem = NSMenuItem(title: "Resume Hardware Sensor", action: #selector(resumeHardware), keyEquivalent: "")
+        newResumeItem.target = self
+        newResumeItem.isEnabled = sensor.isSimulating // nothing to resume until Test Fold is used
+        self.resumeItem = newResumeItem
+        menu.addItem(newResumeItem)
 
         let loginItem = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin(_:)), keyEquivalent: "")
         loginItem.target = self
@@ -172,11 +178,14 @@ public final class MenuBarController: NSObject, NSMenuDelegate {
         if !sensor.isSimulating { overlayWindow.updateAngle(120) }
         let simulatedAngle = sender.doubleValue
         sensor.simulateAngle(simulatedAngle)
+        resumeItem?.isEnabled = true // there is now something to resume from
     }
 
     @objc private func resumeHardware() {
         overlayWindow.updateAngle(120)
         sensor.startMonitoring()
+        slider?.doubleValue = 120 // the slider drove the test angle; reflect that testing has ended
+        resumeItem?.isEnabled = false
     }
 
     @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
