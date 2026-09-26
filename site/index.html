@@ -86,25 +86,12 @@
     <div class="mac" id="mac" role="img" aria-label="Illustration of a MacBook whose screen tilts back, blurs and darkens as the lid closes">
       <div class="lid" id="lid">
         <div class="screen" id="screen">
-          <!-- Sharp wallpaper -->
+          <!-- Wallpaper: one image, blur applied uniformly to the whole thing -->
           <div class="art sharp">
-            <img src="wallpaper.jpg" alt="" loading="eager">
+            <img src="wallpaper.jpg" alt="" loading="eager" id="wallpaperImg">
             <div class="clock"><small id="clockDate"></small><b id="clockTime">9:41</b></div>
           </div>
-          <!-- Blur layers for progressive blur effect - same photo, three CSS blur strengths -->
-          <div class="art blurred b1">
-            <img src="wallpaper.jpg" alt="" loading="eager">
-            <div class="clock"><small></small><b>9:41</b></div>
-          </div>
-          <div class="art blurred b2">
-            <img src="wallpaper.jpg" alt="" loading="eager">
-            <div class="clock"><small></small><b>9:41</b></div>
-          </div>
-          <div class="art blurred b3">
-            <img src="wallpaper.jpg" alt="" loading="eager">
-            <div class="clock"><small></small><b>9:41</b></div>
-          </div>
-          <!-- Shadow overlay -->
+          <!-- Shadow overlay - flat, so darkening is the same everywhere -->
           <div class="shade" id="shade"></div>
           <div class="home"></div>
         </div>

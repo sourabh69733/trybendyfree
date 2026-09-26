@@ -5,14 +5,14 @@
   // DOM refs
   var figure = document.querySelector('.figure');
   var lid = document.getElementById('lid');
-  var screen = document.getElementById('screen');
-  var blurred = document.querySelectorAll('.art.blurred');
+  var wallpaperImg = document.getElementById('wallpaperImg');
   var shade = document.getElementById('shade');
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Animation state
   var lead = 250;      // px: start closing this far before the figure reaches the top
   var travel = 400;     // px: scroll distance from start to fully closed
+  var maxBlur = 14;     // px: blur radius at full close, applied uniformly to the whole wallpaper
   var anchor = 0;       // the figure's fixed position in the page (not affected by scroll)
   var current = 0;
   var target = 0;
@@ -70,22 +70,12 @@
     // A long perspective distance keeps the near edge from magnifying past the keyboard's width.
     lid.style.transform = 'perspective(8000px) rotateX(' + (-(closeP * 72)).toFixed(2) + 'deg)';
 
-    // Progressive blur layers fade in
-    for (var i = 0; i < blurred.length; i++) {
-      blurred[i].style.opacity = bendP.toFixed(3);
-    }
+    // One blur radius applied to the whole wallpaper at once - no masks, so
+    // there is no region of the screen that can be left out.
+    wallpaperImg.style.filter = 'blur(' + (bendP * maxBlur).toFixed(2) + 'px)';
 
-    // Top-edge feather mask - softens the silhouette as it bends
-    var t = bendP * 22;
-    var mask = 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) ' +
-      (t * 0.25).toFixed(2) + '%, rgba(0,0,0,.65) ' +
-      (t * 0.55).toFixed(2) + '%, #000 ' +
-      t.toFixed(2) + '%)';
-    screen.style.webkitMaskImage = mask;
-    screen.style.maskImage = mask;
-
-    // Shadow overlay - a light shadow as it closes, deepening once it bends
-    shade.style.opacity = (closeP * 0.35 + bendP * 0.55).toFixed(3);
+    // Flat shadow, same opacity across the entire screen.
+    shade.style.opacity = (closeP * 0.25 + bendP * 0.45).toFixed(3);
   }
 
   // ── Animation loop ──
